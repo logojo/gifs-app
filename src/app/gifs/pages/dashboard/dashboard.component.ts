@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
+import { SideMenuComponent } from "../../components/dashboard/side-menu/side-menu.component";
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet,  SideMenuComponent],
   templateUrl: './dashboard.component.html',
 })
 export  default class DashboardComponent {
