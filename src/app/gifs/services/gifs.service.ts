@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { catchError, map, tap, throwError } from 'rxjs';
+import { catchError, map, of, tap, throwError } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import type { GiphyResponse } from '../interfaces/giphy.interface';
@@ -24,18 +24,28 @@ const  loadFromLocalStorage = () : Record<string, Gif[]> => {
   providedIn: 'root'
 })
 export class GifsService {
-  http = inject( HttpClient );
-  environment = environment;
+  private http = inject( HttpClient );
+  private environment = environment;
 
-  trendings = signal<Gif[]>([]);
-  loading = signal(true);
+  public trendings = signal<Gif[]>([]);
+  public loading = signal(false);
+
+  public trendingGroup = computed<Gif[][]>(() => {
+    const groups = [];
+    
+    for( let i = 0; i < this.trendings().length; i += 3 ) {
+      groups.push( this.trendings().slice(i, i + 3) );
+    }
+  
+    return groups ;
+  });
 
   searchHistory = signal<Record<string, Gif[]>>(loadFromLocalStorage());
   searchHistoryKey = computed(() => Object.keys(this.searchHistory()));
-
+  page = signal(1);
 
   constructor() {
-    this.loadTrendingGifs();
+    this.loadTrendingGifs(); 
   }
 
   saveToLocalStorage = effect(() => {
@@ -43,26 +53,31 @@ export class GifsService {
   });
 
   loadTrendingGifs() {
-
-    this.http.get<GiphyResponse>(`${environment.apiUrl}/trending`, {
+    if( this.loading() ) return;
+    
+    this.loading.set( true );
+    this.http.get<GiphyResponse>(`${this.environment.apiUrl}/trending`, {
       params: {
-        api_key: environment.apiKey,
-        limit: 20
+        api_key: this.environment.apiKey,
+        limit: 20,
+        offset: this.page() * 20, 
       }
     }).subscribe((res) => {
       
       const gifs = GifMapper.mapGiphyItemsToGifArray(res.data);
-      this.trendings.set(gifs);
+       this.trendings.update((current) => [...current , ...gifs]);
+      this.page.update( (page) => page + 1);
        this.loading.set(false);
     });
 
   }
 
   searchGifs( query: string )  {    
+    
      this.loading.set( true );
-    return this.http.get<GiphyResponse>(`${environment.apiUrl}/search`, {
+    return this.http.get<GiphyResponse>(`${this.environment.apiUrl}/search`, {
       params: {
-        api_key: environment.apiKey,
+        api_key: this.environment.apiKey,
         limit: 20,
         q: query
       }

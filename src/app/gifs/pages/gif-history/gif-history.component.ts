@@ -26,10 +26,18 @@ export default class GifHistoryComponent {
   // );
 
   //* obteniendo imagenes desde la señal que guarda el historial
-  public images = toSignal<Gif[]>(
+  public images = toSignal<Gif[][]>(
     this.route.params.pipe(
       map(({key}) => {
-           return  this.gifsService.searchHistory()[key];
+            const groups = [];
+            const images =   this.gifsService.searchHistory()[key];
+    
+            for( let i = 0; i < images.length; i += 3 ) {
+              groups.push( images.slice(i, i + 3) );
+            }
+  
+          return groups;
+           
         }
        )
     ) 

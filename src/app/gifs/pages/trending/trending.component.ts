@@ -1,38 +1,54 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, viewChild } from '@angular/core';
 import { GifsListComponent } from "../../components/trending/gifs-list/gifs-list.component";
 import { GifsService } from '../../services/gifs.service';
+import type { Gif } from '../../interfaces/gifs.interface';
+import { ScrollStateService } from '../../shared/services/scroll-state.service';
 
 @Component({
   selector: 'app-trending',
   imports: [GifsListComponent],
   templateUrl: './trending.component.html',
 })
-export default class TrendingComponent {
+export default class TrendingComponent implements AfterViewInit {
+  
 
-private gifsService = inject( GifsService );
+  private gifsService = inject( GifsService );
+  private scrollStateService = inject( ScrollStateService );
 
-images = computed(() => this.gifsService.trendings());
+  public images = computed<Gif[][]>(() => this.gifsService.trendingGroup());
 
-// images = signal<string[][]>([
-//     [
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-1.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-2.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-3.jpg",
-//     ],
-//     [
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-4.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-5.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-6.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-7.jpg",
-//     ],
-//     [
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-8.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-9.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-10.jpg",
-//     "https://flowbite.s3.amazonaws.com/docs/gallery/square/image-11.jpg"
-//     ]
-//  ]);
+  scrollSectionRef = viewChild<ElementRef<HTMLDivElement>>('groupSection');
+
+  ngAfterViewInit(): void {
+    const scrollSection  = this.scrollSectionRef()?.nativeElement;
+    if( !scrollSection ) return;
+
+      scrollSection.scrollTop = this.scrollStateService.getScrollState;
+  }
+
+
+
+  onScroll(event: Event): void {
+   const scrollSection  = this.scrollSectionRef()?.nativeElement;
+    if( !scrollSection ) return;
+
+    const scrollTop = scrollSection.scrollTop;
+    const clientHeight = scrollSection.clientHeight;
+    const scrollHeight = scrollSection.scrollHeight;
+   
+    const isAtBotton = scrollTop + clientHeight + 300 >= scrollHeight;
+     this.scrollStateService.setScrollState( this.scrollSectionRef()?.nativeElement.scrollTop ?? 0);
+
+   
+    if( isAtBotton ) {
+        this.gifsService.loadTrendingGifs();
+    }
+    
+   
+   
+   
+    
+  }
 
  
 }

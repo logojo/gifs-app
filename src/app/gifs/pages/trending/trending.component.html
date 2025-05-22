@@ -1,3 +1,5 @@
 
-<gifs-list [images]="images()"/>
+<div (scroll)="onScroll($event)" class="h-screen overflow-y-scroll" #groupSection>
+    <gifs-list [images]="images()"/>
+</div>
 

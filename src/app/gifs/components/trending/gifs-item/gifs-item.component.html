@@ -1,9 +1,9 @@
-<!-- <div class="grid gap-4">
-    @for (image of images(); track $index) { -->
+<div class="grid gap-4">
+    @for (image of images(); track image.id) { 
     <div>
-        <img class="h-full w-full rounded-lg object-cover" [src]="image()" alt="">
+        <img class="h-full w-full rounded-lg object-cover" [src]="image.url" alt="">
     </div>
-    <!-- }
-</div> -->
+    }
+</div>
 
 
